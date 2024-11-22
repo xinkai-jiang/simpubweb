@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    body {
+      display: flex;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    .sidebar {
+      width: 20%;
+      background-color: #f4f4f4;
+      padding: 20px;
+      border-right: 1px solid #ddd;
+    }
+    .sidebar button {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+    }
+    .sidebar button:hover {
+      background-color: #0056b3;
+    }
+    .content {
+      width: 80%;
+      padding: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <button onclick="showAdditionalButtons()">Show More</button>
+    <div id="additional-buttons" class="hidden">
+      <button onclick="showPage('page1')">Page 1</button>
+      <button onclick="showPage('page2')">Page 2</button>
+    </div>
+  </div>
+  <div class="content" id="content">
+    <h2>Welcome</h2>
+    <p>Select a page from the left to display its content.</p>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

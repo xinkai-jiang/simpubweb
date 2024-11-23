@@ -3,16 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Local Network Scanner</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <script src="/static/js/script.js" defer></script>
+    <title>Dashboard</title>
+    <!-- 引入 CSS 文件 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>Local Network Scanner</h1>
-        <ul id="scan-results">
-            <!-- 扫描结果将插入这里 -->
-        </ul>
+    <div class="dashboard">
+        <div class="sidebar">
+            <h1>IRXR Dashboard</h1>
+            <button id="scan-button" class="sidebar-btn">Scan</button>
+            <div id="device-container"></div>
+        </div>
+        <div class="content">
+            <div id="resultContainer"></div>
+        </div>
     </div>
+    <!-- 引入 JS 文件 -->
+
+    <template id="device-template">
+        <div class="device-panel">
+            <div class="device-header">
+                <span class="device-name">Name</span>
+            </div>
+            <div class="device-info">
+                <span class="device-type">Device Name</span>
+                <span class="device-ip">IP Address</span>
+            </div>
+            <div class="device-actions">
+                <button class="action-btn qr-btn">QR Calibration</button>
+                <button class="action-btn view-btn">Get View</button>
+            </div>
+        </div>
+    </template>
+
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

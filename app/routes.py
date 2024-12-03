@@ -20,8 +20,7 @@ def scan_network():
     print("Listening on 0.0.0.0:7720 for broadcast messages...")
     while True:
         try:
-            # 接收数据
-            data, addr = _socket.recvfrom(4096)  # 接收最多 4096 字节
+            data, addr = _socket.recvfrom(4096)
             print(f"Received message from {addr}")
             break
         except socket.timeout:

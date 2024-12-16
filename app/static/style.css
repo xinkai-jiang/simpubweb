@@ -88,11 +88,19 @@ body {
     background-color: #5DADE2;
 }
 
-.action-btn {
-    width: 80%;
-    margin: 10px 0;
+.action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    justify-items: center;
     padding: 10px;
-    font-size: 16px;
+}
+
+.action-btn {
+    width: 90%;
+    margin: 5px 0;
+    padding: 10px;
+    font-size: 14px;
     font-weight: bold;
     color: black;
     background-color: white;

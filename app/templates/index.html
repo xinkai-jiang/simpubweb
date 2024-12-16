@@ -18,23 +18,49 @@
         </div>
     </div>
 
-    <template id="device-template">
+    <template id="master-template">
         <div class="device-panel">
-            <div class="device-header">
+            <div class="device-header" 
+                 data-node-id="" 
+                 data-ip="" 
+                 data-service-port="" 
+                 data-topic-port="">
                 <span class="device-name">Name</span>
             </div>
             <div class="device-info">
-                <span class="device-type">Device Name</span>
+                <span class="device-type">Type</span>
                 <span class="device-ip">IP Address</span>
             </div>
             <div class="device-actions">
-                <button class="action-btn qr-btn">QR Calibration</button>
-                <button class="action-btn view-btn">Get View</button>
+                <button class="action-btn interactive-btn">Interactive View</button>
             </div>
         </div>
     </template>
 
-
+    <template id="xr-template">
+        <div class="device-panel">
+            <div class="device-header" 
+                 data-node-id="" 
+                 data-ip="" 
+                 data-service-port="" 
+                 data-topic-port="">
+                <span class="device-name">Name</span>
+            </div>
+            <div class="device-info">
+                <span class="device-type">Type</span>
+                <span class="device-ip">IP Address</span>
+            </div>
+            <div class="device-actions">
+                <div class="action-grid">
+                    <button class="action-btn start-btn">Start QR Alignment</button>
+                    <button class="action-btn stop-btn">Stop QR Alignment</button>
+                    <button class="action-btn rename-btn">Rename</button>
+                    <button class="action-btn view-btn">View Capture</button>
+                </div>
+            </div>
+        </div>
+    </template>
+    
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

@@ -1,44 +1,61 @@
-from flask import Blueprint, jsonify, render_template
-import socket
-import zmq
-import json
-
+from flask import Blueprint, jsonify, request, render_template
+from typing import Dict
+from .utils import *
 
 main = Blueprint("main", __name__)
 
-
 @main.route("/")
 def index():
+    """Render the index page."""
     return render_template("index.html")
 
 
 @main.route("/scan", methods=["GET"])
-def scan_network():
-    _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    _socket.bind(("0.0.0.0", 7720))
-    _socket.settimeout(5)
-    print("Listening on 0.0.0.0:7720 for broadcast messages...")
-    while True:
-        try:
-            data, addr = _socket.recvfrom(4096)
-            print(f"Received message from {addr}")
-            break
-        except socket.timeout:
-            print(f"No messages received within 5 seconds. Continuing to listen...")
-        except KeyboardInterrupt:
-            print("Stopping listener...")
-            break
-        except Exception as e:
-            print(f"Error: {e}")
-    server_info = json.loads(data.decode().split(":", 2)[2])
-    zmq_context = zmq.Context()
-    zmq_socket = zmq_context.socket(zmq.REQ)
-    ip_addr = server_info["ip"]
-    service_port = server_info["servicePort"]
-    zmq_socket.connect(f"tcp://{ip_addr}:{service_port}")
-    zmq_socket.send_string("GetClientInfo:")
-    client_into = zmq_socket.recv()
-    client_into = json.loads(client_into.decode())
-    msg_dict = {"server": server_info, "clients": client_into}
-    print(f"Server info: {msg_dict}")
-    return jsonify(msg_dict)
+def scan():
+    """Scan the network and store device data."""
+    try:
+        master_info, nodes_info = scan_network("127.0.0.1")
+        master_info['type'] = 'master'  # Add type for master node
+        scanned_data = {"status": "success", "master": master_info, "nodes": nodes_info}
+        return jsonify(scanned_data)
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Failed to scan network: {str(e)}"}), 500
+
+
+@main.route("/start-qr-alignment", methods=["POST"])
+def start_qr_alignment():
+    """Send QR calibration data to a specific node."""
+    node_info: Dict = request.json
+    print(node_info)
+    ip = node_info.get("ip")
+    service_port = node_info.get("servicePort")
+    if not ip or not service_port:
+        return jsonify({"status": "error", "message": "IP and Service Port are required"}), 400
+    # Read QR alignment data from the YAML file
+    try:
+        qr_data = read_qr_alignment_data("QRAlignment.yaml")
+    except FileNotFoundError:
+        return jsonify({"status": "error", "message": "QRAlignment.yaml file not found"}), 500
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Error reading YAML: {str(e)}"}), 500
+    # Send the QR data via ZeroMQ
+    try:
+        response = send_zmq_request(ip, service_port, "QRAlignment", qr_data)
+        return jsonify({"status": "success", "message": "QR Calibration successful", "response": response})
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Error during QR Calibration: {str(e)}"}), 500
+
+
+@main.route("/stop-qr-alignment", methods=["POST"])
+def stop_qr_alignment():
+    """Stop the QR alignment process for a given IP and port."""
+    node_info: Dict = request.json
+    ip = node_info.get("ip")
+    service_port = node_info.get("servicePort")
+    if not ip or not service_port:
+        return jsonify({"status": "error", "message": "IP and Service Port are required"}), 400
+    try:
+        response = send_zmq_request(ip, int(service_port), "StopQRAlignment", {})
+        return jsonify({"status": "success", "message": "Stopped QR Alignment", "response": response})
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Error during Stop QR Alignment: {str(e)}"}), 500

@@ -30,13 +30,13 @@ def read_qr_alignment_data(filepath: str) -> dict:
         return yaml.safe_load(file)
 
 
-def scan_network(ip: str) -> tuple[Dict, Dict]:
+def scan_network() -> tuple[Dict, Dict]:
     _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     _socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    _socket.bind((ip, 0))
+    _socket.bind(("", 0))
     _socket.settimeout(1)
     try:
-        _socket.sendto(EchoHeader.NODES.value, ("127.0.0.1", 7720))
+        _socket.sendto(EchoHeader.NODES.value, ("255.255.255.255", 7720))
         data, _ = _socket.recvfrom(4096)
     except socket.timeout:
         print("No more messages...")

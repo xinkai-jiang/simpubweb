@@ -14,7 +14,7 @@ def index():
 def scan():
     """Scan the network and store device data."""
     try:
-        master_info, nodes_info = scan_network("127.0.0.1")
+        master_info, nodes_info = scan_network()
         master_info['type'] = 'master'  # Add type for master node
         scanned_data = {"status": "success", "master": master_info, "nodes": nodes_info}
         return jsonify(scanned_data)

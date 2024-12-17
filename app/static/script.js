@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Set master attributes
         const deviceHeader = clone.querySelector('.device-header');
+        deviceHeader.setAttribute('data-name', masterInfo.name);
         deviceHeader.setAttribute('data-node-id', masterInfo.nodeID);
         deviceHeader.setAttribute('data-ip', masterInfo.addr.ip);
         deviceHeader.setAttribute('data-service-port', masterInfo.servicePort);
@@ -54,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Set node attributes
         const deviceHeader = clone.querySelector('.device-header');
+        deviceHeader.setAttribute('data-name', nodeInfo.name);
         deviceHeader.setAttribute('data-node-id', nodeInfo.nodeID);
         deviceHeader.setAttribute('data-ip', nodeInfo.addr.ip);
         deviceHeader.setAttribute('data-service-port', nodeInfo.servicePort);
@@ -72,17 +74,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to add event listeners to the buttons
     function addButtonEventListeners(clone, deviceHeader) {
+        const name = deviceHeader.getAttribute('data-name');
         const ip = deviceHeader.getAttribute('data-ip');
         const servicePort = deviceHeader.getAttribute('data-service-port');
 
         // Start QR Alignment button
         clone.querySelector('.start-btn').addEventListener('click', () => {
-            sendPostRequest('/start-qr-alignment', { ip, servicePort: servicePort }, 'Start QR Alignment');
+            sendPostRequest('/start-qr-alignment', { "name": name, "ip": ip, servicePort: servicePort }, 'Start QR Alignment');
         });
 
         // Stop QR Alignment button
         clone.querySelector('.stop-btn').addEventListener('click', () => {
-            sendPostRequest('/stop-qr-alignment', { ip, servicePort: servicePort }, 'Stop QR Alignment');
+            sendPostRequest('/stop-qr-alignment', { "name": name, "ip": ip, servicePort: servicePort }, 'Stop QR Alignment');
         });
 
         // Rename button

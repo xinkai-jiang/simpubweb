@@ -1,10 +1,10 @@
 qrText: "Example QR Code"
 pos:
-  - 1.0
-  - 2.0
-  - 3.0
+  - 0.0
+  - 0.0
+  - 0.0
 euler:
-  - 10.0
-  - 20.0
-  - 30.0
-fixeZ: true
+  - 0.0
+  - 0.0
+  - 90.0
+fixZAxis: false

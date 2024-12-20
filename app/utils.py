@@ -70,7 +70,11 @@ def send_zmq_request(
         socket.setsockopt(zmq.SNDTIMEO, timeout)  # Send timeout
         
         # Send the request
-        socket.send_string("".join([service_name, "|", dumps(request)]))
+        if type(request) == str:
+            socket.send_string("".join([service_name, "|", request]))
+        else:
+            socket.send_string("".join([service_name, "|", dumps(request)]))
+        
         
         # Receive the response
         response = socket.recv_json()

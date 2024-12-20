@@ -67,7 +67,6 @@ def stop_qr_alignment():
 @main.route('/rename-device', methods=['POST'])
 def rename_device():
     data = request.get_json()
-    name = data.get('name')
     new_name = data.get('newName')
     print(new_name)
     ip = data.get('ip')
@@ -75,7 +74,7 @@ def rename_device():
     if not ip or not service_port:
         return jsonify({"status": "error", "message": "IP and Service Port are required"}), 400
     try:
-        response = send_zmq_request(ip, int(service_port), f"Rename", request={"name": new_name})
+        response = send_zmq_request(ip, int(service_port), f"Rename", request=new_name)
         return jsonify({"status": "success", "message": "Stopped QR Alignment", "response": response})
     except Exception as e:
         return jsonify({"status": "error", "message": f"Error during Stop QR Alignment: {str(e)}"}), 500

@@ -77,8 +77,8 @@ def send_zmq_request(
         
         
         # Receive the response
-        response = socket.recv_json()
-        if response['signal'] == 'NOSERVICE':  # type: ignore
+        response = socket.recv_string()
+        if response == 'NOSERVICE':  # type: ignore
             raise Exception("Service not found on the node.")
         return response  # type: ignore
     except zmq.ZMQError as e:

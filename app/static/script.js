@@ -80,6 +80,13 @@ document.addEventListener('DOMContentLoaded', () => {
         clone.querySelector('.view-btn').addEventListener('click', () => {
             alert(`Viewing capture for Node: ${deviceHeader.getAttribute('data-node-id')}`);
         });
+        clone.querySelector('.env-occlusion-btn').addEventListener('click', () => {
+            sendPostRequest('/env-occlusion', { name, ip, servicePort }, 'Environment Occlusion');
+        });
+    
+        clone.querySelector('.log-btn').addEventListener('click', () => {
+            alert(`Log requested for Node: ${deviceHeader.getAttribute('data-node-id')}`);
+        });
     }
 
     function sendPostRequest(url, body, actionName) {

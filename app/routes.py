@@ -26,7 +26,6 @@ def scan():
 def start_qr_alignment():
     """Send QR calibration data to a specific node."""
     node_info: Dict = request.json  # type: ignore
-    print(node_info)
     name = node_info.get("name")
     ip = node_info.get("ip")
     service_port = node_info.get("servicePort")
@@ -40,7 +39,6 @@ def start_qr_alignment():
     except Exception as e:
         return jsonify({"status": "error", "message": f"Error reading YAML: {str(e)}"}), 500
     # Send the QR data via ZeroMQ
-    print(qr_data)
     try:
         response = send_zmq_request(ip, service_port, f"{name}/StartQRAlignment", qr_data)
         return jsonify({"status": "success", "message": "QR Calibration successful", "response": response})
@@ -75,6 +73,22 @@ def rename_device():
         return jsonify({"status": "error", "message": "IP and Service Port are required"}), 400
     try:
         response = send_zmq_request(ip, int(service_port), f"Rename", request=new_name)
-        return jsonify({"status": "success", "message": "Stopped QR Alignment", "response": response})
+        return jsonify({"status": "success", "message": "Rename Device", "response": response})
     except Exception as e:
-        return jsonify({"status": "error", "message": f"Error during Stop QR Alignment: {str(e)}"}), 500
+        return jsonify({"status": "error", "message": f"Error during rename device: {str(e)}"}), 500
+
+
+@main.route('/env-occlusion', methods=['POST'])
+def env_occlusion():
+    node_info: Dict = request.json  # type: ignore
+    name = node_info.get("name")
+    ip = node_info.get("ip")
+    service_port = node_info.get("servicePort")
+    if not ip or not service_port:
+        return jsonify({"status": "error", "message": "IP and Service Port are required"}), 400
+    try:
+        response = send_zmq_request(ip, int(service_port), f"{name}/ToggleOcclusion", {})
+        return jsonify({"status": "success", "message": "ToggleOcclusion", "response": response})
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Error during Toggle Occlusion: {str(e)}"}), 500
+    

@@ -1,8 +1,6 @@
-from flask import Flask
-from app import create_app
-# from .app.routes import main
+from app.web_interface import WebInterface
 
-app = create_app()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+  app = WebInterface()
+  app.run()

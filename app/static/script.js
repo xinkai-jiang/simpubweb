@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle "Scan" button click
     scanButton.addEventListener('click', () => {
-        fetch('/scan')
+        fetch('/devices')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Failed to scan devices');

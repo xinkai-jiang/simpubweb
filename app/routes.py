@@ -1,8 +1,12 @@
 from flask import Blueprint, jsonify, request, render_template
 from typing import Dict
 from .utils import *
-
+from threading import Thread
+from connection import SimPubConnection
 main = Blueprint("main", __name__)
+conn = SimPubConnection()
+Thread(target=conn.loop).start() # start connection
+
 
 @main.route("/")
 def index():

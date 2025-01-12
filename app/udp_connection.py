@@ -76,8 +76,11 @@ class UDPConnection:
     def scan_network(self) -> tuple[NodeInfo, list[NodeInfo]]:
         
         self._socket.sendto(EchoHeader.NODES.value, ("255.255.255.255", UDPConnection.SERVER_PORT))
-        data,_ = self._socket.recvfrom(4096)
-    
+        try:
+            data,_ = self._socket.recvfrom(4096)
+        except TimeoutError:
+            return None, None
+        
         master_info, nodes_info = split_byte_to_str(data)
         master_info, nodes_info = json.loads(master_info), json.loads(nodes_info)
         master_info['type'] = 'master'
@@ -93,9 +96,11 @@ class UDPConnection:
 
         if data is None:
             return False
-
+        
+        if "|" in data: data, conn = data.split("|", 1)
+        
         return NodeInfo.from_string(data).nodeID == master_info.nodeID
-         
+        
 
 
     def search_master_node(self) -> Optional[NodeInfo]:

@@ -1,3 +1,4 @@
+from collections import defaultdict
 from enum import Enum
 import json
 import threading
@@ -56,12 +57,18 @@ class ZMQSocketConnection:
     def has_message(self):
         return self._socket.poll(0, zmq.POLLIN)
 
-    def recv(self, timeout : float = None) -> str:  
+    def recv(self, type : type = str, timeout : float = None) -> str | bytes:  
         if not timeout: 
-            return self._socket.recv_string()
+            if type == str:
+                return self._socket.recv_string()
+            else:
+                return self._socket.recv()
             
-        if self._socket.poll(timeout * 1000, zmq.POLLIN):
-            return self._socket.recv_string()
+        if self._socket.poll(int(timeout * 1000), zmq.POLLIN):
+            if type == str:
+                return self._socket.recv_string()
+            else:
+                return self._socket.recv()
         else:
             return None
 
@@ -93,15 +100,18 @@ class ZMQRequestConnection(ZMQSocketConnection):
     def __init__(self):
         super().__init__(zmq.REQ)
 
-    def request(self, service : str, request : Optional[Union[str, dict]]):
+    def request(self, service : str, request : Optional[Union[str, dict]], type : type = str) -> Optional[Union[str, bytes]]:
         if isinstance(request, dict):
             request = json.dumps(request)
         
         self.send(f"{service}|{request}")
-        response = self.recv()
 
-        if response == 'NOSERVICE':
+        response = self.recv(type)
+        
+        if response == b'NOSERVICE':
             raise Exception("Service not found on the node.")
+        if response == b'TIMEOUT':
+            raise Exception("Request timed out.")
         
         return response
     
@@ -134,29 +144,32 @@ class ZMQSubConnection(ZMQSocketConnection):
     def __init__(self, topic : str = ""):
         super().__init__(zmq.SUB)
         self._topic = topic
-        self._on_message = list()
-    
+        self._on_message = defaultdict(list)
+
     def set_topic(self, topic : str):
         self._topic = topic
 
-    def register(self, fn : Callable[[str], None]):
-        self._on_message.append(fn)
+    def register(self, topic : str, fn : Callable[[str], None]):
+        self._on_message[topic].append(fn)
 
     def connect(self, ip, port):
         super().connect(ip, port)
-        self.subscribe(self._topic)
+        self.subscribe("")
 
     def update(self):
-        message = None
+        message = self.recv()
         while self.has_message():
             message = self.recv()
+        
 
-        if not message: return 
+        if message is None: return 
 
         topic, message = message.split('|')
-        if topic != self._topic: return 
 
-        
-        for fn in self._on_message:
+        message = json.loads(message) if message else None
+
+        if topic not in self._on_message: return
+
+        for fn in self._on_message[topic]:
             fn(message)
     

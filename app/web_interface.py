@@ -1,30 +1,42 @@
-from flask import Blueprint, Flask, jsonify, request, render_template
+import io
+from flask import Blueprint, Flask, jsonify, request, render_template, send_file
 from typing import Dict
+
+from app.scene_renderer import SceneRenderer
 from .utils import *
 from threading import Thread
 from app.simpub_connection import SimPubConnection
+from websockets.sync.server import serve
 
 class WebInterface:
 
-    def __init__(self):
+    def __init__(self, host="127.0.0.1", web_port=8000, ws_port=8001):
         
         self._conn = SimPubConnection()
+        self._renderer = SceneRenderer(self._conn)
         
-        self.app = Flask("app", "/app/")
+        self._app = Flask("app", "/app/", )
+        self._app.logger.disabled = True
 
-        self.app.route("/")(self.index)
-        self.app.route("/devices", methods=["GET"])(self.devices)
-        self.app.route("/scene_id", methods=["GET"])(self.scene_id)
-        self.app.route("/scene", methods=["GET"])(self.scene)
-        self.app.route("/scene_state", methods=["GET"])(self.scene_state)
-        self.app.route("/start-qr-alignment", methods=["POST"])(self.start_qr_alignment)
-        self.app.route("/stop-qr-alignment", methods=["POST"])(self.stop_qr_alignment)
-        self.app.route("/rename-device", methods=["POST"])(self.rename_device)
-        self.app.route("/env-occlusion", methods=["POST"])(self.env_occlusion)
+        self._app.route("/")(self.index)
+        self._app.route("/devices", methods=["GET"])(self.devices)
+        self._app.route("/start-qr-alignment", methods=["POST"])(self.start_qr_alignment)
+        self._app.route("/stop-qr-alignment", methods=["POST"])(self.stop_qr_alignment)
+        self._app.route("/rename-device", methods=["POST"])(self.rename_device)
+        self._app.route("/env-occlusion", methods=["POST"])(self.env_occlusion)
+        self._app.route("/asset/<asset>")(self.send_binary_asset)
 
-    def run(self, port = 8000):
-        Thread(target=self._conn.loop).start() # start connection
-        self.app.run(port=port)
+        self._host = host 
+        self._web_port = web_port
+        self._ws_port = ws_port
+
+        self._conn.register_on_scene_load(self._renderer.update_scene)
+        self._conn.register_on_scene_update(self._renderer.update_state)
+
+    def run(self):
+        self._conn.run()
+        self._renderer.run(host=self._host, port=self._ws_port)    
+        self._app.run(host=self._host, port=self._web_port)
 
 
     def index(self):
@@ -34,16 +46,10 @@ class WebInterface:
     def devices(self):
         master_info, nodes_info = self._conn.devices
         return {"status": "success", "master": master_info, "nodes": nodes_info}
-    
 
-    def scene_id(self):
-        return self._conn.scene_id
-
-    def scene(self):
-        return self._conn.scene.to_string()
-
-    def scene_state(self):
-        return self._conn.scene_state
+    def send_binary_asset(self, asset : str):
+        data = self._renderer.on_data_request(asset)
+        return send_file(io.BytesIO(data), mimetype='image/png')
 
     def start_qr_alignment(self):
         """Send QR calibration data to a specific node."""

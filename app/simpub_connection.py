@@ -59,11 +59,27 @@ class SimPubConnection:
         self.register_service("LoadSimScene", self.on_scene_load)
         self.subscribe_topic("SceneUpdate", self.on_scene_update)
 
+        self._scene_load_hook = list()
+        self._scene_state_hook = list()
+
+    def register_on_scene_load(self, callback : Callable[[SimScene], None]):    
+        self._scene_load_hook.append(callback)
+    
+    def register_on_scene_update(self, callback : Callable[[dict], None]):
+        self._scene_state_hook.append(callback)
+
+    def run(self):
+        threading.Thread(target=self.loop).start()
+
     def on_scene_load(self, scene : str):
         self._scene = SimScene.from_string(scene)
+        for hook in self._scene_load_hook:
+            hook(self._scene)
         return MessageReturnTypes.SUCCESS.value
     
     def on_scene_update(self, update : str):
+        for hook in self._scene_state_hook:
+            hook(update)
         self._scene_state = update
     
     def register_service(self, service : str, callback : Callable[[str], str]):
@@ -73,23 +89,12 @@ class SimPubConnection:
 
     def subscribe_topic(self, topic : str, callback : Callable[[str], None]):
         self._topicCallbacks[topic] = callback
-        self._subSocket.register(callback)
+        self._subSocket.register(topic, callback)
     
     @property
     def devices(self):
         return self._udp.scan_network()    
             
-    @property
-    def scene(self) -> Optional[SimScene]:
-        return self._scene
-
-    @property
-    def scene_id(self) -> Optional[str]:
-        return self._scene.scene_id if self._scene else 0
-    
-    @property
-    def scene_state(self) -> dict:
-        return self._scene_state
 
     def loop(self, hb_timeout = 0.5, hb_interval = 0.2):
         while self._running:
@@ -109,8 +114,8 @@ class SimPubConnection:
 
             self._stop_connection()
 
-    def request(self, service : str, request : Optional[Union[str, dict]]):
-        return self._reqSocket.request(service, request)
+    def request(self, service : str, request : Optional[Union[str, dict]], type : type = str) -> Optional[Union[str, bytes]]:
+        return self._reqSocket.request(service, request, type=type)
 
     def _start_connection(self, master_info : NodeInfo):
         if self._connected:

@@ -31,19 +31,31 @@ def read_qr_alignment_data(filepath: str) -> dict:
 
 
 def scan_network() -> tuple[Dict, Dict]:
+    
     _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    _socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    _socket.bind(("", 0))
-    _socket.settimeout(1)
-    try:
-        _socket.sendto(EchoHeader.NODES.value, ("255.255.255.255", 7720))
-        data, _ = _socket.recvfrom(4096)
-    except socket.timeout:
-        print("No more messages...")
-    finally:
-        _socket.close()
-    master_info, nodes_info = split_byte_to_str(data)
-    return loads(master_info), loads(nodes_info)
+    _socket.bind(("0.0.0.0", 7720))
+    _socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    _socket.settimeout(5)
+    print("Listening on 0.0.0.0:7720 for broadcast messages...")
+    for _ in range(5):
+        try:
+            data, _ = _socket.recvfrom(4096)
+            msg = data.decode()
+            if msg.startswith("SimPub"):
+                break
+        except socket.timeout:
+            print(f"No messages received within 5 seconds. Continuing to listen...")
+        except KeyboardInterrupt:
+            print("Stopping listener...")
+        except Exception as e:
+            print(f"Error: {e}")
+    _socket.close()
+    master_info = loads(msg.split("|", maxsplit=2)[1])
+    ip_addr = master_info["addr"]["ip"]
+    service_port = master_info["servicePort"]
+    msg = send_zmq_request(ip_addr, service_port, "GetNodesInfo", {})
+    nodes_info = loads(msg)
+    return master_info, nodes_info
 
 
 def send_zmq_request(

@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, render_template
 from typing import Dict
 from .utils import *
+import traceback
 
 main = Blueprint("main", __name__)
 
@@ -19,6 +20,7 @@ def scan():
         scanned_data = {"status": "success", "master": master_info, "nodes": nodes_info}
         return jsonify(scanned_data)
     except Exception as e:
+        traceback.print_exc()
         return jsonify({"status": "error", "message": f"Failed to scan network: {str(e)}"}), 500
 
 
